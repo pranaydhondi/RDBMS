@@ -4,6 +4,7 @@
 
 #include "TreeNode.h"
 #include "Utils.h"
+#include "FileHandler.h"
 #ifndef LOOKUPITER_H
 #define LOOKUPITER_H
 
@@ -15,11 +16,12 @@ private:
     char* key;
     KeyType keyType;
     int payloadlen;
+    FileHandler* fHandler;
 
 public:
 
     /* constructor to create valid lookup iter*/
-    LookupIter(char *_key, KeyType _keyType, TreeNode *_node, int _position, int _payloadLen);
+    LookupIter(FileHandler * _fHandler,char *_key, KeyType _keyType, TreeNode *_node, int _position, int _payloadLen);
 
     /* constructor to create null lookup iter */
     LookupIter();
@@ -37,6 +39,7 @@ public:
      * will be loaded in the given char array, and 0 is returned.
      * If there is no next, then -1 is returned. */
     int get(char* payload);
+    int loadNode(TreeNode *here, char *offset);
 };
 
 

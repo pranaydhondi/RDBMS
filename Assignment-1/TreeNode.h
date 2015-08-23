@@ -16,8 +16,8 @@ public:
 	byte myaddr[NODE_OFFSET_SIZE];
 	Utils *utils;
 	char flag;
-	TreeNode* next;
-	//byte *nextaddr;
+	//TreeNode* next;
+	byte *nextaddr;
 	TreeNode();
 	~TreeNode();
 	int addData(KeyType keytype, char* key, int payloadlen, char* payload,

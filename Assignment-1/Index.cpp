@@ -9,7 +9,6 @@
  * Modified for CS 631 Assignment-1
  */
 
-#include "FileHandler.h"
 #include "LookupIter.h"
 
 #include<set>
@@ -91,6 +90,8 @@ public:
                          sizeof(node->numkeys));
         position += sizeof(node->numkeys);
         Utils::copyBytes(&block[position], (node->data), sizeof(node->data));
+        position += sizeof(node->data);
+        Utils::copyBytes(&block[position], (node->nextaddr), NODE_OFFSET_SIZE);
         fHandler->writeBlock(offset, block);
         free(block);
         return 0;
@@ -111,7 +112,9 @@ public:
         here->numkeys = Utils::getIntForBytes(&(block[position]));
         position += sizeof(here->numkeys);
         Utils::copyBytes(here->data, &(block[position]), sizeof(here->data));
-
+		position += sizeof(here->data);
+		here->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
+		 Utils::copyBytes(here->nextaddr, &(block[position]), NODE_OFFSET_SIZE);
         free(block);
         return 0;
     }
@@ -231,17 +234,20 @@ public:
         newLeaf->flag = 'c';
         newLeaf->numkeys = node->numkeys - splitPos;
 		node->numkeys = splitPos;
-		if(node->next == NULL){ // checking whether nextaddress of node is available
-			node->next = newLeaf;
-			//Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
+		/*if(node->nextaddr == NULL){ // checking whether nextaddress of node is available
+			node->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
+			//node->next = newLeaf;
+			Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
+			printf("%s\n",node->nextaddr);
 		}else{
-			newLeaf->next = node->next;
-			node->next = newLeaf;
-			//Utils::copyBytes(newLeaf->nextaddr, node->nextaddr, NODE_OFFSET_SIZE);
-			//Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
-		}
-		node->display(keytype);
-		newLeaf->display(keytype);
+			newLeaf->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
+			//newLeaf->next = node->next;
+			//node->next = newLeaf;
+			Utils::copyBytes(newLeaf->nextaddr, node->nextaddr, NODE_OFFSET_SIZE);
+			Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
+		}*/
+		//node->display(keytype);
+		//newLeaf->display(keytype);
         /*
          * Get the parent to add pointers to. accessPath has list of all nodes accessed till now. This array gives us the pareent
          */
@@ -258,6 +264,23 @@ public:
         newLeaf->getKey(keytype, nextKey, 0);
         storeNode(node, Utils::getIntForBytes(node->myaddr));
         storeNode(newLeaf, -1);
+        //if(!node->nextaddr)printf("It is null here");
+        if(node->nextaddr == NULL){ // checking whether nextaddress of node is available
+			node->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
+			//node->next = newLeaf;
+			Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
+			//printf("b%d\n",Utils::getIntForBytes(node->nextaddr));
+			//printf("a%d\n",Utils::getIntForBytes(newLeaf->myaddr));
+		}else{
+			newLeaf->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
+			//newLeaf->next = node->next;
+			//node->next = newLeaf;
+			Utils::copyBytes(newLeaf->nextaddr, node->nextaddr, NODE_OFFSET_SIZE);
+			Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
+			//printf("%d\n",Utils::getIntForBytes(node->nextaddr));
+		}
+		storeNode(node, Utils::getIntForBytes(node->myaddr));
+        storeNode(newLeaf,  Utils::getIntForBytes(newLeaf->myaddr));
         char left[NODE_OFFSET_SIZE];
         Utils::copyBytes(left, node->myaddr, NODE_OFFSET_SIZE);
         char right[NODE_OFFSET_SIZE];
@@ -584,7 +607,7 @@ public:
 
         int i, isLesser;
         while(current != 0) {
-            //current->display(keytype);
+            current->display(keytype);
 
             for (i = 0 ; i<current->numkeys ; i++ ) {
                 current->getKey(keytype,nodekey,i);
@@ -599,7 +622,7 @@ public:
                     return new LookupIter();
 
                 //key found, copy payload
-                return new LookupIter(key,keytype,current,i,payloadlen);
+                return new LookupIter(fHandler,key,keytype,current,i,payloadlen);
             }
             else{
 				if(isLesser >0 && i == 0 )handleNonLeaf(&current, i);
