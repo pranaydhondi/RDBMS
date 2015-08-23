@@ -11,6 +11,7 @@ using namespace std;
 
 TreeNode::TreeNode() {
 	next = NULL;
+	//nextaddr = NULL;
 }
 
 

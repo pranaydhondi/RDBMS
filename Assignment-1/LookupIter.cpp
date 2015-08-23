@@ -31,10 +31,22 @@ bool LookupIter::hasNext() {
 		 node->getKey(keyType,tempNodekey,position+1);
 		 if(compare(key,tempNodekey,keyType)==0){
 			 return true;
-			 }
-		 else return false;
 		 }
+		 else return false;
+	 }else if(position == size -1){
+		 printf("endl\n");
+		 TreeNode *tempNode;
+		 if(node->next == NULL)return false;
+		 tempNode = node->next;
+		 char tempNodekey[keylen(&keyType)];
+		 tempNode->getKey(keyType,tempNodekey,0);
+		 if(compare(key,tempNodekey,keyType)==0){
+			 return true;
+		 }
+		 else return false;
+	 }
 	 else{
+		 
 		 return false;
 		 }
 }
@@ -46,9 +58,13 @@ int LookupIter::next() {
      * Hint: See usage in Index.cpp.main() to understand functionality
      * Also see LookupIter.h
      */
+     int size = node->numkeys;
      if(!hasNext()) {
 		 nullIter = true;
 		 return -1;
+	 }else if(position == size -1){
+		 node = node->next;
+		 position = 0;
 	 }
      else{
 		 position++;

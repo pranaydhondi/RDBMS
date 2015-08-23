@@ -12,7 +12,6 @@ private:
     bool nullIter;
     TreeNode* node;
     int position;
-    
     char* key;
     KeyType keyType;
     int payloadlen;

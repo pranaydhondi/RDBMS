@@ -148,21 +148,9 @@ public:
                     addToLeafNoSplit(key, payload, i, &current);
                 }
                 else{
-                    /*
-                      * TODO: Fill in the required code.
-                      * Hint: You will need to use the function handleLeafSplit
-                      */
-                     //case1
-                     current->getKey(keytype, nodekey,current->numkeys-1);
-                     if(isEqual(key,nodekey,keytype)==1 && i==0){
-						 cout<<"This key cannot be inserted as node is overflown"<<endl;
-						 return 0;
-					}
-					 //case2
-                     else{
-						 handleLeafSplit(key,payload,&current,accessPath,height,i,0);
-						 break;
-						 }
+					 int half = current->numkeys/2;
+					 handleLeafSplit(key,payload,&current,accessPath,height,i,half);
+					 break;
                 }
             }
             else{
@@ -221,7 +209,7 @@ public:
         node->addData(keytype, key, payloadlen, payload, position);
         node->numkeys = node->numkeys + 1;
         storeNode(node, Utils::getIntForBytes(node->myaddr));
-
+		
         *rcvd_node = 0;
         return 0;
     }
@@ -235,15 +223,25 @@ public:
          */
         int tempSpaceSize = DATA_SIZE + payloadlen + keylen(&keytype);
         char *tempSpace = (char*) calloc(tempSpaceSize, sizeof(char));
-
+		
         copyToTemp(key, payload, insertPos, node, tempSpaceSize, tempSpace);
         node->numkeys = node->numkeys + 1;
-        //doSplit(node, newLeaf, tempSpaceSize, tempSpace, splitPos);
-		customSplit(node, newLeaf, tempSpaceSize, tempSpace);
-        //newLeaf->flag = 'c';
-        //newLeaf->numkeys = node->numkeys - splitPos;
-        //node->numkeys = splitPos;
-
+        doSplit(node, newLeaf, tempSpaceSize, tempSpace, splitPos);
+		//customSplit(node, newLeaf, tempSpaceSize, tempSpace);
+        newLeaf->flag = 'c';
+        newLeaf->numkeys = node->numkeys - splitPos;
+		node->numkeys = splitPos;
+		if(node->next == NULL){ // checking whether nextaddress of node is available
+			node->next = newLeaf;
+			//Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
+		}else{
+			newLeaf->next = node->next;
+			node->next = newLeaf;
+			//Utils::copyBytes(newLeaf->nextaddr, node->nextaddr, NODE_OFFSET_SIZE);
+			//Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
+		}
+		node->display(keytype);
+		newLeaf->display(keytype);
         /*
          * Get the parent to add pointers to. accessPath has list of all nodes accessed till now. This array gives us the pareent
          */
@@ -256,7 +254,7 @@ public:
         }
 
         char nextKey[keylen(&keytype)];
-
+		
         newLeaf->getKey(keytype, nextKey, 0);
         storeNode(node, Utils::getIntForBytes(node->myaddr));
         storeNode(newLeaf, -1);
@@ -573,14 +571,20 @@ public:
          * TODO: Fill in code to lookup the index and return an iterator for the results
          */
          
-         TreeNode * current = new TreeNode();
+        TreeNode * current = new TreeNode();
         loadNode(current,rootAddress);
+        return find_help(key,current);
+        
+        
+         
+    }
+    LookupIter* find_help(char key[],TreeNode* current){
 
         char nodekey[keylen(&keytype)];
 
         int i, isLesser;
         while(current != 0) {
-            current->display(keytype);
+            //current->display(keytype);
 
             for (i = 0 ; i<current->numkeys ; i++ ) {
                 current->getKey(keytype,nodekey,i);
@@ -597,13 +601,22 @@ public:
                 //key found, copy payload
                 return new LookupIter(key,keytype,current,i,payloadlen);
             }
-            else
-                handleNonLeaf(&current, i);
+            else{
+				if(isLesser >0 && i == 0 )handleNonLeaf(&current, i);
+				else{
+					TreeNode *tempNode;
+					tempNode= current;
+					handleNonLeaf(&current, i-1);
+					LookupIter* temp = find_help(key,current);
+					if(temp->isNull()){
+						handleNonLeaf(&tempNode, i);
+						current = tempNode;
+					}else return temp;
+				}
+			}
+                
         }
-        
-        
-         
-    }
+	}
 };
 
 void testDups(Index *index);
@@ -674,7 +687,7 @@ void doInsert(Index *index, int a) {
     strcpy(payL, keyN);
     index->insert(keyN, payL);
     cout<<"---- "<<a<<" ----"<<endl;
-    index->find(keyN);
+    //index->find(keyN);
     cout<<"========="<<endl;
 }
 

@@ -17,6 +17,7 @@ public:
 	Utils *utils;
 	char flag;
 	TreeNode* next;
+	//byte *nextaddr;
 	TreeNode();
 	~TreeNode();
 	int addData(KeyType keytype, char* key, int payloadlen, char* payload,
