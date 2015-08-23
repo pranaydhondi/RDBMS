@@ -148,7 +148,6 @@ public:
                     addToLeafNoSplit(key, payload, i, &current);
                 }
                 else{
-					//cout<<i<<endl;
                     /*
                       * TODO: Fill in the required code.
                       * Hint: You will need to use the function handleLeafSplit
@@ -332,8 +331,8 @@ public:
 		newLeaf->flag = 'c';
         newLeaf->numkeys = node->numkeys - splitPos;
         node->numkeys = splitPos;
-		node->display(keytype);
-		newLeaf->display(keytype);
+		//node->display(keytype);
+		//newLeaf->display(keytype);
 		return 0;
 	}
 
@@ -692,7 +691,7 @@ void testDups(Index *index) {
         a = testVals[i];
         testValsSet.insert(a);
         doInsert(index, a);
-        index->root->display(index->keytype);
+        //index->root->display(index->keytype);
     }
     cout<<"Done inserting"<<endl<<endl;
     
