@@ -636,16 +636,12 @@ public:
             }
             else{
 				if(isLesser==0){
-					cout<<i<<endl;
-					if(i==0)handleNonLeaf(&current, i);
-					else{
-						TreeNode *tempNode = new TreeNode();
-						myhandleNonLeaf(&current, i-1,tempNode);
-						LookupIter* temp = find_help(key,tempNode);
-						if(temp->isNull()){
-							handleNonLeaf(&current, i);
-						}else return temp;
-					}
+					TreeNode *tempNode = new TreeNode();
+					myhandleNonLeaf(&current, i,tempNode);
+					LookupIter* temp = find_help(key,tempNode);
+					if(temp->isNull()){
+						handleNonLeaf(&current, i+1);
+					}else return temp;
 				}else handleNonLeaf(&current, i);
 			}
                 
@@ -729,8 +725,8 @@ void testDups(Index *index) {
     int a;
     int i;
 
-    int testVals[] = {3,5,3,4,3,5,3,5,5};
-    int arrSize = 9;
+    int testVals[] = {3,5,3,4,5,3,5,5,3,3};
+    int arrSize = 10;
     set<int> testValsSet;
 
     cout<<"Starting inserts"<<endl;
