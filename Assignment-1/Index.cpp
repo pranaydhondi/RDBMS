@@ -602,6 +602,15 @@ public:
         
          
     }
+    int myhandleNonLeaf(TreeNode **rcvd_node, int position,TreeNode* tempNode) {
+        TreeNode *node = *rcvd_node;
+        char *nextNodeAddress;
+        nextNodeAddress = (char *) malloc(NODE_OFFSET_SIZE);
+        node->getPayload(NODE_OFFSET_SIZE, nextNodeAddress, position);
+        loadNode(tempNode, nextNodeAddress);
+        free(nextNodeAddress);
+        return 0;
+    }
     LookupIter* find_help(char key[],TreeNode* current){
 
         char nodekey[keylen(&keytype)];
@@ -613,7 +622,7 @@ public:
             for (i = 0 ; i<current->numkeys ; i++ ) {
                 current->getKey(keytype,nodekey,i);
                 isLesser = compare(nodekey,key,keytype);
-                if ( isLesser == 1 || (isLesser ==0 && current->flag =='c') ){
+                if ( isLesser >= 0 ){
                     break;
                 }
             }
@@ -627,11 +636,11 @@ public:
             }
             else{
 				if(isLesser==0){
+					cout<<i<<endl;
 					if(i==0)handleNonLeaf(&current, i);
 					else{
 						TreeNode *tempNode = new TreeNode();
-						tempNode= current;
-						handleNonLeaf(&tempNode, i-1);
+						myhandleNonLeaf(&current, i-1,tempNode);
 						LookupIter* temp = find_help(key,tempNode);
 						if(temp->isNull()){
 							handleNonLeaf(&current, i);
