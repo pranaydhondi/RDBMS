@@ -76,7 +76,6 @@ public:
     int storeNode(TreeNode *node, long long int offset) {
         if (offset == -1) {
             offset = fHandler->getSize();
-
         }
         Utils::copyBytes(node->myaddr, Utils::getBytesForInt(offset), NODE_OFFSET_SIZE);
         char *block = (char *) malloc(BLOCK_SIZE);
@@ -91,7 +90,10 @@ public:
         position += sizeof(node->numkeys);
         Utils::copyBytes(&block[position], (node->data), sizeof(node->data));
         position += sizeof(node->data);
-        Utils::copyBytes(&block[position], (node->nextaddr), NODE_OFFSET_SIZE);
+        if(node->nextaddr){
+			Utils::copyBytes(&(block[position]), (node->nextaddr), NODE_OFFSET_SIZE);
+		}
+        else Utils::copyBytes(&(block[position]), Utils::getBytesForInt(-1), NODE_OFFSET_SIZE);
         fHandler->writeBlock(offset, block);
         free(block);
         return 0;
@@ -101,7 +103,7 @@ public:
      */
     int loadNode(TreeNode *here, char *offset) {
         int position = 0;
-        char *block = (char *) calloc(BLOCK_SIZE, BLOCK_SIZE);
+        char *block = (char *) malloc(BLOCK_SIZE);
 
         fHandler->readBlock(Utils::getIntForBytes(offset), block);
         Utils::copyBytes(here->myaddr, offset, NODE_OFFSET_SIZE);
@@ -113,8 +115,11 @@ public:
         position += sizeof(here->numkeys);
         Utils::copyBytes(here->data, &(block[position]), sizeof(here->data));
 		position += sizeof(here->data);
-		here->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
-		 Utils::copyBytes(here->nextaddr, &(block[position]), NODE_OFFSET_SIZE);
+		//printf("%d %d\n",Utils::getIntForBytes(&block[position]),position);
+		if(Utils::getIntForBytes(&block[position]) != -1){
+			here->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
+			Utils::copyBytes(here->nextaddr, &(block[position]), NODE_OFFSET_SIZE);
+		}
         free(block);
         return 0;
     }
@@ -246,8 +251,8 @@ public:
 			Utils::copyBytes(newLeaf->nextaddr, node->nextaddr, NODE_OFFSET_SIZE);
 			Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
 		}*/
-		//node->display(keytype);
-		//newLeaf->display(keytype);
+		node->display(keytype);
+		newLeaf->display(keytype);
         /*
          * Get the parent to add pointers to. accessPath has list of all nodes accessed till now. This array gives us the pareent
          */
@@ -264,20 +269,16 @@ public:
         newLeaf->getKey(keytype, nextKey, 0);
         storeNode(node, Utils::getIntForBytes(node->myaddr));
         storeNode(newLeaf, -1);
-        //if(!node->nextaddr)printf("It is null here");
         if(node->nextaddr == NULL){ // checking whether nextaddress of node is available
 			node->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
 			//node->next = newLeaf;
 			Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
-			//printf("b%d\n",Utils::getIntForBytes(node->nextaddr));
-			//printf("a%d\n",Utils::getIntForBytes(newLeaf->myaddr));
 		}else{
 			newLeaf->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
 			//newLeaf->next = node->next;
 			//node->next = newLeaf;
 			Utils::copyBytes(newLeaf->nextaddr, node->nextaddr, NODE_OFFSET_SIZE);
 			Utils::copyBytes(node->nextaddr, newLeaf->myaddr, NODE_OFFSET_SIZE);
-			//printf("%d\n",Utils::getIntForBytes(node->nextaddr));
 		}
 		storeNode(node, Utils::getIntForBytes(node->myaddr));
         storeNode(newLeaf,  Utils::getIntForBytes(newLeaf->myaddr));
@@ -625,17 +626,18 @@ public:
                 return new LookupIter(fHandler,key,keytype,current,i,payloadlen);
             }
             else{
-				if(isLesser >0 && i == 0 )handleNonLeaf(&current, i);
-				else{
-					TreeNode *tempNode;
-					tempNode= current;
-					handleNonLeaf(&current, i-1);
-					LookupIter* temp = find_help(key,current);
-					if(temp->isNull()){
-						handleNonLeaf(&tempNode, i);
-						current = tempNode;
-					}else return temp;
-				}
+				if(isLesser==0){
+					if(i==0)handleNonLeaf(&current, i);
+					else{
+						TreeNode *tempNode = new TreeNode();
+						tempNode= current;
+						handleNonLeaf(&tempNode, i-1);
+						LookupIter* temp = find_help(key,tempNode);
+						if(temp->isNull()){
+							handleNonLeaf(&current, i);
+						}else return temp;
+					}
+				}else handleNonLeaf(&current, i);
 			}
                 
         }
@@ -718,7 +720,7 @@ void testDups(Index *index) {
     int a;
     int i;
 
-    int testVals[] = {3,3,3,3,4,5,5,5,5};
+    int testVals[] = {3,5,3,4,3,5,3,5,5};
     int arrSize = 9;
     set<int> testValsSet;
 
@@ -727,7 +729,7 @@ void testDups(Index *index) {
         a = testVals[i];
         testValsSet.insert(a);
         doInsert(index, a);
-        //index->root->display(index->keytype);
+        index->root->display(index->keytype);
     }
     cout<<"Done inserting"<<endl<<endl;
     
@@ -735,6 +737,7 @@ void testDups(Index *index) {
 
     while(!(testValsSet.empty())){
         int curVal = *(testValsSet.begin());
+        cout<<"current value:"<<curVal<<endl;
         testValsSet.erase(testValsSet.begin());
 
         char *keyN = (char *) calloc(8, 1);

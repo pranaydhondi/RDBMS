@@ -13,12 +13,12 @@ LookupIter::LookupIter(FileHandler * _fHandler,char *_key, KeyType _keyType, Tre
 LookupIter::LookupIter() {
     nullIter = true;
 }
-int LookupIter::loadNode(TreeNode *here, char *offset) {
-        int position = 0;
-        char *block = (char *) calloc(BLOCK_SIZE, BLOCK_SIZE);
+ int LookupIter::loadNode(TreeNode *here, char *offset) {
+		int position = 0;
+        char *block = (char *) malloc(BLOCK_SIZE);
 
         fHandler->readBlock(Utils::getIntForBytes(offset), block);
-        Utils::copyBytes(here->myaddr, offset, NODE_OFFSET_SIZE);
+        Utils::copyBytes(here->myaddr,offset, NODE_OFFSET_SIZE);
         position += NODE_OFFSET_SIZE;
 
         here->flag = block[position];
@@ -27,8 +27,11 @@ int LookupIter::loadNode(TreeNode *here, char *offset) {
         position += sizeof(here->numkeys);
         Utils::copyBytes(here->data, &(block[position]), sizeof(here->data));
 		position += sizeof(here->data);
-		here->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
-		Utils::copyBytes(here->nextaddr, &(block[position]), NODE_OFFSET_SIZE);
+		//printf("%d %d\n",Utils::getIntForBytes(&block[position]),position);
+		if(Utils::getIntForBytes(&block[position]) != -1){
+			here->nextaddr = (char *) malloc(NODE_OFFSET_SIZE);
+			Utils::copyBytes(here->nextaddr, &(block[position]), NODE_OFFSET_SIZE);
+		}
         free(block);
         return 0;
     }
@@ -54,14 +57,11 @@ bool LookupIter::hasNext() {
 		 }
 		 else return false;
 	 }else if(position == size -1){
-		  printf("endl\n");
-		 TreeNode *tempNode;
-		 if(!node->nextaddr)printf("akdjla");
-		  printf("endl\n");
+		 TreeNode *tempNode ;
+		 tempNode = new TreeNode();
+		 if(!node->nextaddr)return false;
 		 loadNode(tempNode,node->nextaddr);
-		 printf("endl\n");
 		 tempNode->display(keyType);
-		 printf("endl\n");
 		 char tempNodekey[keylen(&keyType)];
 		 tempNode->getKey(keyType,tempNodekey,0);
 		 if(compare(key,tempNodekey,keyType)==0){
@@ -88,6 +88,7 @@ int LookupIter::next() {
 		 return -1;
 	 }else if(position == size -1){
 		 TreeNode *tempNode;
+		 tempNode = new TreeNode();
 		 loadNode(tempNode,node->nextaddr);
 		 node = tempNode;
 		 position = 0;
