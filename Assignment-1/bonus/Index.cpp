@@ -414,7 +414,7 @@ public:
         for (i = 0; i < parent->numkeys; i++) {
             parent->getKey(keytype, nodekey, i);
             int isLesser = compare(nodekey, key, keytype);
-            if (isLesser >= 0) {
+            if (isLesser > 0) {
                 break;
             }
         }
@@ -725,8 +725,8 @@ void testDups(Index *index) {
     int a;
     int i;
 
-    int testVals[] = {3,5,3,4,5,3,5,5,3,3};
-    int arrSize = 10;
+    int testVals[] = {12,4,7,4,4,4,4,4,4,7,7,7,7,7,7,7,7,7};
+    int arrSize = 18;
     set<int> testValsSet;
 
     cout<<"Starting inserts"<<endl;

@@ -1,0 +1,9 @@
+Team Members :
+120050054 Pranay Dhondi
+120050068 Gangadhar KV
+
+Implementation :
+	Insert: We just split the node at the middle
+	Find: We searched the key , if we get key=node key then we searched to its left if we find something then we just returned that address
+unless we searched to the right of the node.
+	Modifications : we kept nextaddress in treenode and modified the loadnode and store node
