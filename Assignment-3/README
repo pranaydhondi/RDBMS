@@ -1,0 +1,27 @@
+Assignment Group Members:
+1) Pranay Dhondi	120050054
+2) K V Gangadhar	120050078
+
+The attachement contains 3 files
+1)PrefixMatch.java performs only predicting the words with given prefix
+2)NextWord.java performs along with predicting the words with given prefix,
+it also top 3 preceding words for the given word. format of output is 
+accordance with the format mentioned in the problem
+3)Combiner.java it performs same fuction which is done by Nextword but
+it uses combiner which is useful to reduce no.of read and write sectors.
+
+Project Details:-
+	1) PrefixMatch.java for every word greater than 3, we have mapped the 
+all the prefix of the word to word given. Then reduced according to find
+the 3 word which gives the  most prior probability of picking of the word 
+with the given prefix
+	2) NextWord.java, In addition to above we have mapped the word to its
+next word so that we can find the 3 words which gives the most prior prob-
+ability of picking preceding word given the current word
+	3) Combiner.java, The combine perfors the same function of Nextword
+but to the smaller inputs given by mapping function and reducer integrates
+the output given by combiner to form output to whole data.
+
+Acknowledgments:-
+	Since nothing has mentioned about the ordering of words in the case of
+tie. We have followed our own convention.
